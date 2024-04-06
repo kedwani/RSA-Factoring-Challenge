@@ -1,88 +1,52 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
-typedef struct
-{
-    unsigned long long quotient;
-    unsigned long long remainder;
-} DivisionResult;
 
-DivisionResult divideLargeNumber(const char *dividend, unsigned  long long divisor)
+int main(int argc, char** argv)
 {
-	DivisionResult result;
-	result.quotient = 0;
-	result.remainder = 0;
-	unsigned long long tempDividend = 0;
-	for (int i = 0; dividend[i] != '\0'; i++)
+	int o;
+	ssize_t read_bytes;
+	char buff[1024], *ptr;
+	unsigned long long int n, calc;
+
+	if (argc != 2)
 	{
-		tempDividend = tempDividend * 10 + (dividend[i] - '0');
-		if (tempDividend >= divisor)
-		{
-			result.quotient = result.quotient * 10 + (tempDividend / divisor);
-			tempDividend = tempDividend % divisor;
-		}
-		else if (result.quotient > 0)
-		{
-			result.quotient = result.quotient * 10;
-		}
+		printf("Usage: %s <filename>\n", argv[0]);
+		return 1;
 	}
-	result.remainder = tempDividend;
-	return result;
-}
-int main(int argc, char **argv)
-{
-    FILE *file;
-    char buff[1024];
-    unsigned long long int n, calc, i;
-    DivisionResult res;
-    if (argc != 2)
-    {
-        printf("Usage: %s <filename>\n", argv[0]);
-        return 1;
-    }
-
-    file = fopen(argv[1], "r");
-    if (!file)
-    {
-        perror("Error opening file");
-        return 1;
-    }
-
-    while (fgets(buff, sizeof(buff), file))
-    {
-        if (strlen(buff) >= 20)
-        {
-		buff[strlen(buff) - 1] = '\0';
-		i = 3;
-		res = divideLargeNumber(buff, i);
-		while(res.remainder != 0)
-		{
-			i+=2;
-			res = divideLargeNumber(buff, i);
-		}
-			printf("%s=%llu*%llu\n",buff, res.quotient, i);
-		continue;
+	o = open(argv[1], O_RDONLY);
+	if (o == -1) {
+		perror("Error opening file");
+		return 1;
 	}
-	else
+	while ((read_bytes = read(o, buff, sizeof(buff) - 1)) > 0)
 	{
-		n = strtoull(buff, NULL, 10);
-		for (calc = 2; calc <= n; ++calc)
+		buff[read_bytes] = '\0';
+		ptr = buff;
+
+		while (*ptr)
 		{
-			if ((n % calc) == 0)
-			{
-				printf("%llu=%llu*%llu\n", n, calc, n / calc);
+			n = strtoull(ptr, &ptr, 10);
+			if (n == 0)
 				break;
-			}
+			for (calc = 2; calc <= n; ++calc)
+				if ((n % calc) == 0)
+				{
+					printf("%llu=%llu*%llu\n", n, calc, n / calc); // Change format specifiers to %llu
+					break;
+				}
 		}
 	}
-    }
-    if (ferror(file))
-    {
-        perror("Error reading file");
-        fclose(file);
-        return 1;
-    }
-
-    fclose(file);
-    return 0;
+	if (read_bytes == -1) {
+		perror("Error reading file");
+		close(o);
+		return 1;
+	}
+	if (close(o) == -1) {
+		perror("Error closing file");
+		return 1;
+	}
+	return 0;
 }
