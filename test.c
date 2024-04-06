@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 			for (calc = 2; calc <= n; ++calc)
 				if ((n % calc) == 0)
 				{
-					printf("%llu=%llu*%llu\n", n, calc, n / calc); // Change format specifiers to %llu
+					printf("%llu=%llu*%llu\n", n, n / calc,  calc);
 					break;
 				}
 		}
