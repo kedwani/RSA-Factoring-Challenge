@@ -7,34 +7,34 @@ typedef struct
     unsigned long long remainder;
 } DivisionResult;
 
-DivisionResult divideLargeNumber(const char *dividend, unsigned long divisor)
+DivisionResult divideLargeNumber(const char *dividend, unsigned  long long divisor)
 {
-    DivisionResult result;
-    result.quotient = 0;
-    result.remainder = 0;
-    unsigned long long tempDividend = 0;
-    for (int i = 0; dividend[i] != '\0'; i++)
-    {
-        tempDividend = tempDividend * 10 + (dividend[i] - '0');
-        if (tempDividend >= divisor)
-        {
-            result.quotient = result.quotient * 10 + (tempDividend / divisor);
-            tempDividend = tempDividend % divisor;
-        }
-        else if (result.quotient > 0)
-        {
-            result.quotient = result.quotient * 10;
-        }
-    }
-    result.remainder = tempDividend;
-    return result;
+	DivisionResult result;
+	result.quotient = 0;
+	result.remainder = 0;
+	unsigned long long tempDividend = 0;
+	for (int i = 0; dividend[i] != '\0'; i++)
+	{
+		tempDividend = tempDividend * 10 + (dividend[i] - '0');
+		if (tempDividend >= divisor)
+		{
+			result.quotient = result.quotient * 10 + (tempDividend / divisor);
+			tempDividend = tempDividend % divisor;
+		}
+		else if (result.quotient > 0)
+		{
+			result.quotient = result.quotient * 10;
+		}
+	}
+	result.remainder = tempDividend;
+	return result;
 }
 int main(int argc, char **argv)
 {
     FILE *file;
     char buff[1024];
-    unsigned long long int n, calc;
-
+    unsigned long long int n, calc, i;
+    DivisionResult res;
     if (argc != 2)
     {
         printf("Usage: %s <filename>\n", argv[0]);
@@ -52,21 +52,30 @@ int main(int argc, char **argv)
     {
         if (strlen(buff) >= 20)
         {
-            divideLargeNumber(buff, i);
-            continue;
-        }
-
-        n = strtoull(buff, NULL, 10);
-        for (calc = 2; calc <= n; ++calc)
-        {
-            if ((n % calc) == 0)
-            {
-                printf("%llu=%llu*%llu\n", n, calc, n / calc);
-                break;
-            }
-        }
+		buff[strlen(buff) - 1] = '\0';
+		i = 3;
+		res = divideLargeNumber(buff, i);
+		while(res.remainder != 0)
+		{
+			i+=2;
+			res = divideLargeNumber(buff, i);
+		}
+			printf("%s=%llu*%llu\n",buff, res.quotient, i);
+		continue;
+	}
+	else
+	{
+		n = strtoull(buff, NULL, 10);
+		for (calc = 2; calc <= n; ++calc)
+		{
+			if ((n % calc) == 0)
+			{
+				printf("%llu=%llu*%llu\n", n, calc, n / calc);
+				break;
+			}
+		}
+	}
     }
-
     if (ferror(file))
     {
         perror("Error reading file");
