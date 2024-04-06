@@ -1,52 +1,39 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <math.h>
 
-int main(int argc, char** argv)
-{
-	int o;
-	ssize_t read_bytes;
-	char buff[1024], *ptr;
-	unsigned long long int n, calc;
+int main(int argc, char **argv) {
+    FILE *fp;
+    unsigned long long int n;
 
-	if (argc != 2)
-	{
-		printf("Usage: %s <filename>\n", argv[0]);
-		return 1;
-	}
-	o = open(argv[1], O_RDONLY);
-	if (o == -1) {
-		perror("Error opening file");
-		return 1;
-	}
-	while ((read_bytes = read(o, buff, sizeof(buff) - 1)) > 0)
-	{
-		buff[read_bytes] = '\0';
-		ptr = buff;
+    if (argc != 2) {
+        printf("Usage: %s <filename>\n", argv[0]);
+        return 1;
+    }
 
-		while (*ptr)
-		{
-			n = strtoull(ptr, &ptr, 10);
-			if (n == 0)
-				break;
-			for (calc = 2; calc <= n; ++calc)
-				if ((n % calc) == 0)
-				{
-					printf("%llu=%llu*%llu\n", n, n / calc,  calc);
-					break;
-				}
-		}
-	}
-	if (read_bytes == -1) {
-		perror("Error reading file");
-		close(o);
-		return 1;
-	}
-	if (close(o) == -1) {
-		perror("Error closing file");
-		return 1;
-	}
-	return 0;
+    fp = fopen(argv[1], "r");
+    if (!fp) {
+        perror("Error opening file");
+        return 1;
+    }
+
+    while (fscanf(fp, "%llu\n", &n) != EOF) {
+        unsigned long long int divisor = n % 2 == 0 ? 2 : 3;
+        for (; divisor * divisor <= n; divisor += 2) {
+            if (n % divisor == 0) {
+                printf("%llu=%llu*%llu\n", n, n / divisor, divisor);
+                break;
+            }
+        }
+        // If no divisor was found, the number is prime and we print it multiplied by 1
+        if (divisor * divisor > n) {
+            printf("%llu=%llu*1\n", n, n);
+        }
+    }
+
+    fclose(fp);
+    return 0;
 }
