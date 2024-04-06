@@ -1,34 +1,52 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <stdlib.h>
-#include <math.h>
+#include <string.h>
 
-unsigned long long find_factor(unsigned long long n) {
-    // Optimized factor finding
-    if (n % 2 == 0) return 2;
-    for (unsigned long long i = 3; i <= sqrt(n); i += 2) {
-        if (n % i == 0) return i;
-    }
-    return n; // n is prime
-}
+int main(int argc, char** argv)
+{
+	int o;
+	ssize_t read_bytes;
+	char buff[1024], *ptr;
+	unsigned long long int n, calc;
 
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("Usage: factors <file>\n");
-        return 1;
-    }
+	if (argc != 2)
+	{
+		printf("Usage: %s <filename>\n", argv[0]);
+		return 1;
+	}
+	o = open(argv[1], O_RDONLY);
+	if (o == -1) {
+		perror("Error opening file");
+		return 1;
+	}
+	while ((read_bytes = read(o, buff, sizeof(buff) - 1)) > 0)
+	{
+		buff[read_bytes] = '\0';
+		ptr = buff;
 
-    FILE *file = fopen(argv[1], "r");
-    if (!file) {
-        perror("Error opening file");
-        return 1;
-    }
-
-    unsigned long long n;
-    while (fscanf(file, "%llu", &n) != EOF) {
-        unsigned long long factor = find_factor(n);
-        printf("%llu=%llu*%llu\n", n, n / factor, factor);
-    }
-
-    fclose(file);
-    return 0;
+		while (*ptr)
+		{
+			n = strtoull(ptr, &ptr, 10);
+			if (n == 0)
+				break;
+			for (calc = 2; calc <= n; ++calc)
+				if ((n % calc) == 0)
+				{
+					printf("%llu=%llu*%llu\n", n, calc, n / calc); // Change format specifiers to %llu
+					break;
+				}
+		}
+	}
+	if (read_bytes == -1) {
+		perror("Error reading file");
+		close(o);
+		return 1;
+	}
+	if (close(o) == -1) {
+		perror("Error closing file");
+		return 1;
+	}
+	return 0;
 }
