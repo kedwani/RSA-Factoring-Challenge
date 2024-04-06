@@ -1,39 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <math.h>
 
-int main(int argc, char **argv) {
-    FILE *fp;
-    unsigned long long int n;
+unsigned long long find_factor(unsigned long long n) {
+    // Optimized factor finding
+    if (n % 2 == 0) return 2;
+    for (unsigned long long i = 3; i <= sqrt(n); i += 2) {
+        if (n % i == 0) return i;
+    }
+    return n; // n is prime
+}
 
+int main(int argc, char *argv[]) {
     if (argc != 2) {
-        printf("Usage: %s <filename>\n", argv[0]);
+        printf("Usage: factors <file>\n");
         return 1;
     }
 
-    fp = fopen(argv[1], "r");
-    if (!fp) {
+    FILE *file = fopen(argv[1], "r");
+    if (!file) {
         perror("Error opening file");
         return 1;
     }
 
-    while (fscanf(fp, "%llu\n", &n) != EOF) {
-        unsigned long long int divisor = n % 2 == 0 ? 2 : 3;
-        for (; divisor * divisor <= n; divisor += 2) {
-            if (n % divisor == 0) {
-                printf("%llu=%llu*%llu\n", n, n / divisor, divisor);
-                break;
-            }
-        }
-        // If no divisor was found, the number is prime and we print it multiplied by 1
-        if (divisor * divisor > n) {
-            printf("%llu=%llu*1\n", n, n);
-        }
+    unsigned long long n;
+    while (fscanf(file, "%llu", &n) != EOF) {
+        unsigned long long factor = find_factor(n);
+        printf("%llu=%llu*%llu\n", n, n / factor, factor);
     }
 
-    fclose(fp);
+    fclose(file);
     return 0;
 }
